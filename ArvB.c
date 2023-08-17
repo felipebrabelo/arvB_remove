@@ -14,9 +14,9 @@ int pos_chave(struct NO *no, int valor) {
 }
 
 int antecessor(struct NO *no, int pos) {
-    if (!no->folha) {
+    if (!eFolha(no)) {
         struct NO *aux = no->filhos[pos]; //subárvore esquerda
-        while (!aux->folha) {
+        while (!eFolha(aux)) {
             aux = aux->filhos[aux->qtd_chaves - 1];
         }
         return aux->chaves[aux->qtd_chaves - 1];
@@ -30,9 +30,9 @@ int antecessor(struct NO *no, int pos) {
 }
 
 int sucessor(struct NO *no, int pos) {
-    if (!no->folha) {
+    if (!eFolha(no)) {
         struct NO *aux = no->filhos[pos + 1];
-        while (!aux->folha) {
+        while (!eFolha(aux)) {
             aux = aux->filhos[0];
         }
         return aux->chaves[0];
@@ -46,7 +46,7 @@ int sucessor(struct NO *no, int pos) {
 }
 
 void folha_remove(struct NO *no, int pos) {
-    for (int i = pos; i < no->qtd_chaves - 2; i++) {
+    for (int i = pos; i < no->qtd_chaves - 1; i++) {
         no->chaves[i] = no->chaves[i + 1];
     }
     no->qtd_chaves--;
@@ -61,7 +61,7 @@ void concatenar_filhos(struct NO **no_pai, int pos) {
     for (int i = 0; i < filho_posterior->qtd_chaves; i++) {
         filho_anterior->chaves[filho_anterior->qtd_chaves + i] = filho_posterior->chaves[i];
     }
-    if (!filho_anterior->folha) {
+    if (!eFolha(filho_anterior)) {
         for (int i = 0; i <= filho_posterior->qtd_chaves; i++) {
             filho_anterior->filhos[filho_anterior->qtd_chaves + i] = filho_posterior->filhos[i];
         }
@@ -84,14 +84,14 @@ void redistribuir_esquerdo(struct NO *no, int pos) {
     for (int i = filho_atual->qtd_chaves - 1; i >= 0; i--) {
         filho_atual->chaves[i + 1] = filho_atual->chaves[i];
     }
-    if (!filho_atual->folha) {
+    if (!eFolha(filho_atual)) {
         for (int i = filho_atual->qtd_chaves; i >= 0; i++) {
             filho_atual->filhos[i + 1] = filho_atual->filhos[i];
         }
     }
     filho_atual->qtd_chaves++;
     filho_atual->chaves[0] = no->chaves[pos - 1];
-    if (!filho_atual->folha) {
+    if (!eFolha(filho_atual)) {
         filho_atual->filhos[0] = irmao_anterior->filhos[irmao_anterior->qtd_chaves - 1];
     }
     no->chaves[pos - 1] = irmao_anterior->chaves[irmao_anterior->qtd_chaves - 1];
@@ -103,14 +103,14 @@ void redistribuir_direito(struct NO *no, int pos) {
     struct NO *irmao_posterior = no->filhos[pos + 1];
     filho_atual->chaves[filho_atual->qtd_chaves] = no->chaves[pos];
     filho_atual->qtd_chaves++;
-    if (!filho_atual->folha) {
+    if (!eFolha(filho_atual)) {
         filho_atual->filhos[filho_atual->qtd_chaves] = irmao_posterior->filhos[0];
     }
     no->chaves[pos] = irmao_posterior->chaves[0];
     for (int i = 1; i < irmao_posterior->qtd_chaves; i++) {
         irmao_posterior->chaves[i - 1] = irmao_posterior->chaves[i];
     }
-    if (!irmao_posterior->folha) {
+    if (!eFolha(irmao_posterior)) {
         for (int i = 0; i <= irmao_posterior->qtd_chaves; i++) {
             irmao_posterior->filhos[i - 1] = irmao_posterior->filhos[i];
         }
@@ -131,7 +131,6 @@ void interno_remove(struct NO *no, int pos) {
     } else {
         aux = no->chaves[pos];
         concatenar_filhos(&no, pos);
-        printf("%d\n",aux);
         arvB_remove(&no->filhos[pos], aux);
     }
 }
@@ -140,14 +139,17 @@ int arvB_remove(ArvB *raiz, int valor) {
     struct NO *aux = *raiz;
     int pos = pos_chave(aux, valor);
     if (pos < aux->qtd_chaves && aux->chaves[pos] == valor) {
-        if (aux->folha) {
+        if (eFolha(aux)) {
             folha_remove(aux, pos);
         } else {
             interno_remove(aux, pos);
         }
+        if(aux->qtd_chaves == 0){
+            free(aux);
+        }
         return 1;
     }
-    if (aux->folha) {
+    if (eFolha(aux)) {
         printf("Não existe a chave requisitada dentro da árvore.\n");
         return 0;
     }
@@ -160,7 +162,7 @@ int arvB_remove(ArvB *raiz, int valor) {
             redistribuir_direito(aux, pos);
             return arvB_remove(&aux->filhos[pos], valor);
         }
-        if (pos < aux->qtd_chaves - 1) {
+        if (pos < aux->qtd_chaves - 1 || aux->qtd_chaves == 1) {
             concatenar_filhos(raiz, pos);
             return arvB_remove(&aux->filhos[pos], valor);
         }
@@ -186,7 +188,7 @@ void arvB_imprime(ArvB *raiz) {
     while (!filaVazia(q)) {
         struct NO *no = remove_Fila(q);
         no_imprime(no);
-        if (!no->folha) {
+        if (!eFolha(no)) {
             for (int i = 0; i <= no->qtd_chaves; i++) {
                 insere_Fila(q, no->filhos[i]);
             }
@@ -252,7 +254,7 @@ Fila *liberaFila(Fila *q) {
 
 
 bool eFolha(struct NO *no){
-    return (no->filhos[0] != NULL);
+    return (no->filhos[0] == NULL);
 }
 
 void arvB_destroi(ArvB *raiz){

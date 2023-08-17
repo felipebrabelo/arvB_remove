@@ -20,7 +20,7 @@ struct NO {
     int qtd_chaves;
     int chaves[ordem - 1];
     struct NO *filhos[ordem];
-    bool folha;
+    //bool folha;
 };
 struct celula {
     struct NO *conteudo;
