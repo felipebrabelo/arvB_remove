@@ -6,6 +6,7 @@ int posicao_alfabeto(char letra){
 }
 
 int main() {
+
     struct NO *noraizp = (struct NO*) malloc(sizeof(struct NO));
     noraizp->qtd_chaves = 1;
     // noraizp->folha = false;
@@ -83,4 +84,5 @@ int main() {
     arvB_imprime(raiz);
     arvB_destroi(raiz);
     //arvB_imprime(raiz);
+
 }
